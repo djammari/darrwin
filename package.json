@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "prisma generate && next build --turbopack",
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "validate": "npm run type-check && npm run lint && npm run build"
+    "validate": "npm run type-check && npm run lint && npm run build",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "react": "19.1.0",
