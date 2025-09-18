@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { PatientWithCounts } from '@/types/database';
 
 // Validation schema for creating a new patient
 const createPatientSchema = z.object({
@@ -35,7 +36,7 @@ export async function GET() {
     });
 
     // Transform the data to match frontend expectations
-    const transformedPatients = patients.map(patient => ({
+    const transformedPatients = patients.map((patient: PatientWithCounts) => ({
       id: patient.id,
       name: patient.name,
       breed: patient.breed,

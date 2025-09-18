@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { PatientWithRelations, Appointment, Session } from '@/types/database';
 
 // Validation schema for updating a patient
 const updatePatientSchema = z.object({
@@ -58,35 +59,36 @@ export async function GET(
     }
 
     // Transform the data to match frontend expectations
+    const patientWithRelations = patient as PatientWithRelations;
     const transformedPatient = {
-      id: patient.id,
-      name: patient.name,
-      breed: patient.breed,
-      birthDate: patient.birthDate.toISOString(),
-      gender: patient.gender.toLowerCase(),
-      weight: patient.weight,
-      color: patient.color,
-      microchipId: patient.microchipId,
-      ownerName: patient.ownerName,
-      ownerPhone: patient.ownerPhone,
-      ownerEmail: patient.ownerEmail,
-      medicalNotes: patient.medicalNotes,
-      appointments: patient.appointments.map((apt) => ({
+      id: patientWithRelations.id,
+      name: patientWithRelations.name,
+      breed: patientWithRelations.breed,
+      birthDate: patientWithRelations.birthDate.toISOString(),
+      gender: patientWithRelations.gender.toLowerCase(),
+      weight: patientWithRelations.weight,
+      color: patientWithRelations.color,
+      microchipId: patientWithRelations.microchipId,
+      ownerName: patientWithRelations.ownerName,
+      ownerPhone: patientWithRelations.ownerPhone,
+      ownerEmail: patientWithRelations.ownerEmail,
+      medicalNotes: patientWithRelations.medicalNotes,
+      appointments: patientWithRelations.appointments.map((apt: Appointment) => ({
         id: apt.id,
         startTime: apt.startTime.toISOString(),
         endTime: apt.endTime.toISOString(),
         title: apt.title,
         status: apt.status.toLowerCase(),
       })),
-      sessions: patient.sessions.map((session) => ({
+      sessions: patientWithRelations.sessions.map((session: Session) => ({
         id: session.id,
         sessionDate: session.sessionDate.toISOString(),
         notes: session.notes,
         diagnosis: session.diagnosis,
         treatment: session.treatment,
       })),
-      createdAt: patient.createdAt.toISOString(),
-      updatedAt: patient.updatedAt.toISOString(),
+      createdAt: patientWithRelations.createdAt.toISOString(),
+      updatedAt: patientWithRelations.updatedAt.toISOString(),
     };
 
     return NextResponse.json(transformedPatient);
