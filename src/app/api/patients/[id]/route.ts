@@ -122,7 +122,7 @@ export async function PUT(
     const data = validationResult.data;
     
     // Prepare update data
-    const updateData: any = { ...data };
+    const updateData: Record<string, unknown> = { ...data };
     
     if (data.gender) {
       updateData.gender = data.gender.toUpperCase() as 'MALE' | 'FEMALE';

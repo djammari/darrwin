@@ -37,7 +37,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, differenceInYears, differenceInMonths } from 'date-fns';
+import { differenceInYears, differenceInMonths } from 'date-fns';
 
 // Patient type definition
 interface Patient {
@@ -114,7 +114,7 @@ export default function PatientsPage() {
       const data = await response.json();
       setPatients(data);
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Failed to load patients. Using demo data for now.');
       // For now, use demo data until we set up the backend
       setPatients([
@@ -182,7 +182,7 @@ export default function PatientsPage() {
       setDialogOpen(false);
       reset();
       setError(null);
-    } catch (err) {
+    } catch {
       // For demo purposes, add to local state
       const newPatient: Patient = {
         id: Date.now().toString(),
