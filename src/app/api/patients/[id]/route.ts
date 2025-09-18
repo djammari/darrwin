@@ -18,9 +18,9 @@ const updatePatientSchema = z.object({
 });
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // GET /api/patients/[id] - Fetch a specific patient
@@ -29,9 +29,10 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
+    const { id } = await params;
     const patient = await prisma.patient.findUnique({
       where: {
-        id: params.id,
+        id,
       },
       include: {
         appointments: {
@@ -104,6 +105,7 @@ export async function PUT(
   { params }: RouteParams
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     
     // Validate the request body
@@ -135,7 +137,7 @@ export async function PUT(
     // Update the patient in the database
     const patient = await prisma.patient.update({
       where: {
-        id: params.id,
+        id,
       },
       data: updateData,
     });
@@ -183,9 +185,10 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
+    const { id } = await params;
     await prisma.patient.delete({
       where: {
-        id: params.id,
+        id,
       },
     });
 
