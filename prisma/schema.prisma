@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+// Patient model - represents a pet in the veterinary practice
+model Patient {
+  id          String   @id @default(cuid())
+  
+  // Pet basic information
+  name        String   @db.VarChar(50)
+  breed       String   @db.VarChar(50)
+  birthDate   DateTime
+  gender      Gender
+  weight      Float?   // in kilograms
+  color       String?  @db.VarChar(30)
+  microchipId String?  @db.VarChar(20)
+  
+  // Owner information
+  ownerName   String   @db.VarChar(100)
+  ownerPhone  String   @db.VarChar(20)
+  ownerEmail  String?  @db.VarChar(100)
+  
+  // Medical information
+  medicalNotes String? @db.Text
+  
+  // Relationships (we'll add these later)
+  appointments Appointment[]
+  sessions     Session[]
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("patients")
+}
+
+// Appointment model - represents scheduled visits
+model Appointment {
+  id          String      @id @default(cuid())
+  
+  // Appointment details
+  startTime   DateTime
+  endTime     DateTime
+  title       String      @db.VarChar(100)
+  description String?     @db.Text
+  status      AppointmentStatus @default(SCHEDULED)
+  
+  // Relationships
+  patientId   String
+  patient     Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  // Session created from this appointment (optional)
+  session     Session?
+  
+  // Timestamps
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  @@map("appointments")
+}
+
+// Session model - represents completed visits with notes
+model Session {
+  id            String   @id @default(cuid())
+  
+  // Session details
+  sessionDate   DateTime @default(now())
+  duration      Int?     // in minutes
+  
+  // Medical information
+  symptoms      String?  @db.Text
+  diagnosis     String?  @db.Text
+  treatment     String?  @db.Text
+  notes         String?  @db.Text
+  homework      String?  @db.Text
+  
+  // Follow-up information
+  nextVisitDate DateTime?
+  followUpNotes String?  @db.Text
+  
+  // File attachments (scan results, x-rays, etc.)
+  attachments   String[] // Array of file URLs from Vercel Blob
+  
+  // Relationships
+  patientId     String
+  patient       Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  appointmentId String?     @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@map("sessions")
+}
+
+// Enums for type safety
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+  NO_SHOW
+}

@@ -1,103 +1,310 @@
-import Image from "next/image";
+import { 
+  Container, 
+  Typography, 
+  Box, 
+  Button, 
+  Card, 
+  CardContent, 
+  Grid2 as Grid,
+  Chip
+} from '@mui/material';
+import Link from 'next/link';
+import { 
+  CalendarToday, 
+  Pets, 
+  Assignment, 
+  Dashboard 
+} from '@mui/icons-material';
+// import { vetCard, patientCard, appointmentSlot } from '../styles/components.css';
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box textAlign="center" mb={6}>
+        <Typography variant="h2" component="h1" gutterBottom>
+          🐾 VetPractice Pro
+        </Typography>
+        <Typography variant="h5" color="text.secondary" gutterBottom>
+          Professional Veterinary Practice Management
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          Streamline your veterinary practice with scheduling, patient records, and session tracking
+        </Typography>
+      </Box>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <Grid container spacing={3} mb={6}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ 
+            borderRadius: 2, 
+            p: 3, 
+            boxShadow: 1,
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': { 
+              boxShadow: 3, 
+              transform: 'translateY(-2px)' 
+            } 
+          }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <CalendarToday sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Smart Scheduling
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Drag-and-drop calendar with appointment management
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ 
+            borderRadius: 2, 
+            p: 3, 
+            boxShadow: 1,
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': { 
+              boxShadow: 3, 
+              transform: 'translateY(-2px)' 
+            } 
+          }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Pets sx={{ fontSize: 48, color: 'secondary.main', mb: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Patient Profiles
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Complete patient records with breed, age, and medical history
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ 
+            borderRadius: 2, 
+            p: 3, 
+            boxShadow: 1,
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': { 
+              boxShadow: 3, 
+              transform: 'translateY(-2px)' 
+            } 
+          }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Assignment sx={{ fontSize: 48, color: 'success.main', mb: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Session Notes
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Track progress, treatments, and homework for each visit
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card sx={{ 
+            borderRadius: 2, 
+            p: 3, 
+            boxShadow: 1,
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': { 
+              boxShadow: 3, 
+              transform: 'translateY(-2px)' 
+            } 
+          }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Dashboard sx={{ fontSize: 48, color: 'warning.main', mb: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                File Management
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Store and organize scan results, x-rays, and documents
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Box mb={4}>
+        <Typography variant="h4" gutterBottom>
+          Preview: Styling System
+        </Typography>
+        <Typography variant="body1" color="text.secondary" mb={3}>
+          Material UI components with custom styling using the sx prop (Vanilla Extract integration coming next)
+        </Typography>
+        
+        <Grid container spacing={2} mb={3}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Card sx={{ 
+              p: 2, 
+              m: 1, 
+              borderRadius: 2, 
+              border: 2, 
+              borderColor: 'primary.main',
+              backgroundColor: '#e3f2fd',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease-in-out' 
+            }}>
+              <Typography variant="h6">Buddy - Golden Retriever</Typography>
+              <Typography variant="body2" color="text.secondary">Next appointment: Today 2:00 PM</Typography>
+              <Box mt={1}>
+                <Chip label="Active" color="primary" size="small" />
+              </Box>
+            </Card>
+          </Grid>
+          
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Card sx={{ 
+              p: 2, 
+              m: 1, 
+              borderRadius: 2, 
+              border: 2, 
+              borderColor: 'success.main',
+              backgroundColor: '#e8f5e8',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease-in-out' 
+            }}>
+              <Typography variant="h6">Luna - Persian Cat</Typography>
+              <Typography variant="body2" color="text.secondary">Last visit: Yesterday 10:30 AM</Typography>
+              <Box mt={1}>
+                <Chip label="Completed" color="success" size="small" />
+              </Box>
+            </Card>
+          </Grid>
+          
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Card sx={{ 
+              p: 2, 
+              m: 1, 
+              borderRadius: 2, 
+              border: 2, 
+              borderColor: 'error.main',
+              backgroundColor: '#ffebee',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease-in-out' 
+            }}>
+              <Typography variant="h6">Max - German Shepherd</Typography>
+              <Typography variant="body2" color="text.secondary">Emergency visit needed</Typography>
+              <Box mt={1}>
+                <Chip label="Urgent" color="error" size="small" />
+              </Box>
+            </Card>
+          </Grid>
+        </Grid>
+
+        <Typography variant="h6" gutterBottom>
+          Appointment Status Examples:
+        </Typography>
+        <Grid container spacing={1}>
+          <Grid size={{ xs: 6, md: 2 }}>
+            <Box sx={{ 
+              borderRadius: 1, 
+              p: 1, 
+              fontSize: '0.875rem', 
+              fontWeight: 500, 
+              textAlign: 'center', 
+              color: 'white', 
+              minHeight: '40px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              backgroundColor: '#2196f3'
+            }}>
+              Scheduled
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 6, md: 2 }}>
+            <Box sx={{ 
+              borderRadius: 1, 
+              p: 1, 
+              fontSize: '0.875rem', 
+              fontWeight: 500, 
+              textAlign: 'center', 
+              color: 'white', 
+              minHeight: '40px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              backgroundColor: '#ff9800'
+            }}>
+              In Progress
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 6, md: 2 }}>
+            <Box sx={{ 
+              borderRadius: 1, 
+              p: 1, 
+              fontSize: '0.875rem', 
+              fontWeight: 500, 
+              textAlign: 'center', 
+              color: 'white', 
+              minHeight: '40px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              backgroundColor: '#4caf50'
+            }}>
+              Completed
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 6, md: 2 }}>
+            <Box sx={{ 
+              borderRadius: 1, 
+              p: 1, 
+              fontSize: '0.875rem', 
+              fontWeight: 500, 
+              textAlign: 'center', 
+              color: 'white', 
+              minHeight: '40px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              backgroundColor: '#f44336'
+            }}>
+              Cancelled
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 6, md: 2 }}>
+            <Box sx={{ 
+              borderRadius: 1, 
+              p: 1, 
+              fontSize: '0.875rem', 
+              fontWeight: 500, 
+              textAlign: 'center', 
+              color: 'white', 
+              minHeight: '40px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              backgroundColor: '#9c27b0'
+            }}>
+              Rescheduled
+            </Box>
+          </Grid>
+        </Grid>
+      </Box>
+
+      <Box textAlign="center" mt={6}>
+        <Link href="/patients" passHref>
+          <Button 
+            variant="contained" 
+            size="large" 
+            startIcon={<Pets />}
+            sx={{ mr: 2 }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+            Manage Patients
+          </Button>
+        </Link>
+        <Button 
+          variant="outlined" 
+          size="large"
+          startIcon={<CalendarToday />}
+          disabled
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          View Calendar (Coming Soon)
+        </Button>
+      </Box>
+    </Container>
   );
 }
