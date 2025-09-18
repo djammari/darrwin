@@ -71,14 +71,14 @@ export async function GET(
       ownerPhone: patient.ownerPhone,
       ownerEmail: patient.ownerEmail,
       medicalNotes: patient.medicalNotes,
-      appointments: patient.appointments.map(apt => ({
+      appointments: patient.appointments.map((apt: any) => ({
         id: apt.id,
         startTime: apt.startTime.toISOString(),
         endTime: apt.endTime.toISOString(),
         title: apt.title,
         status: apt.status.toLowerCase(),
       })),
-      sessions: patient.sessions.map(session => ({
+      sessions: patient.sessions.map((session: any) => ({
         id: session.id,
         sessionDate: session.sessionDate.toISOString(),
         notes: session.notes,
