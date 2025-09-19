@@ -11,7 +11,6 @@ import {
   Grid2 as Grid,
   Chip,
   Avatar,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -22,8 +21,9 @@ import {
   Select,
   MenuItem,
   Alert,
-  Skeleton
+  Paper
 } from '@mui/material';
+import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
   Pets as PetsIcon,
@@ -220,11 +220,105 @@ export default function PatientsPage() {
     const initial = patient.name.charAt(0).toUpperCase();
     const bgColor = patient.gender === 'male' ? '#1976d2' : '#d32f2f';
     return (
-      <Avatar sx={{ bgcolor: bgColor, width: 56, height: 56 }}>
+      <Avatar sx={{ bgcolor: bgColor, width: 32, height: 32 }}>
         {initial}
       </Avatar>
     );
   };
+
+  // Define columns for the DataGrid
+  const columns: GridColDef[] = [
+    {
+      field: 'avatar',
+      headerName: '',
+      width: 60,
+      renderCell: (params) => getPatientAvatar(params.row),
+      sortable: false,
+      filterable: false,
+    },
+    {
+      field: 'name',
+      headerName: 'Name',
+      width: 150,
+      renderCell: (params) => (
+        <Box>
+          <Typography variant="body2" fontWeight="medium">
+            {params.row.name}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {params.row.breed}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      field: 'gender',
+      headerName: 'Gender',
+      width: 100,
+      renderCell: (params) => (
+        <Chip 
+          icon={params.row.gender === 'male' ? <MaleIcon /> : <FemaleIcon />}
+          label={params.row.gender}
+          size="small"
+          color={params.row.gender === 'male' ? 'primary' : 'secondary'}
+        />
+      ),
+    },
+    {
+      field: 'age',
+      headerName: 'Age',
+      width: 100,
+      renderCell: (params) => (
+        <Chip 
+          icon={<CakeIcon />}
+          label={calculateAge(params.row.birthDate)}
+          size="small"
+          variant="outlined"
+        />
+      ),
+    },
+    {
+      field: 'weight',
+      headerName: 'Weight',
+      width: 100,
+      renderCell: (params) => params.row.weight ? `${params.row.weight} kg` : '-',
+    },
+    {
+      field: 'ownerName',
+      headerName: 'Owner',
+      width: 150,
+      renderCell: (params) => (
+        <Box>
+          <Typography variant="body2" fontWeight="medium">
+            {params.row.ownerName}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {params.row.ownerPhone}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      field: 'actions',
+      type: 'actions',
+      headerName: 'Actions',
+      width: 120,
+      getActions: (params) => [
+        <GridActionsCellItem
+          key="view"
+          icon={<ViewIcon />}
+          label="View"
+          onClick={() => console.log('View patient:', params.row.id)}
+        />,
+        <GridActionsCellItem
+          key="edit"
+          icon={<EditIcon />}
+          label="Edit"
+          onClick={() => console.log('Edit patient:', params.row.id)}
+        />,
+      ],
+    },
+  ];
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -296,119 +390,72 @@ export default function PatientsPage() {
         </Grid>
       </Grid>
 
-      {/* Patient List */}
-      <Typography variant="h5" gutterBottom>
-        Patients
-      </Typography>
-      
-      {loading ? (
-        <Grid container spacing={2}>
-          {[1, 2, 3].map((n) => (
-            <Grid key={n} size={{ xs: 12, md: 6, lg: 4 }}>
-              <Card>
-                <CardContent>
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Skeleton variant="circular" width={56} height={56} />
-                    <Box flex={1}>
-                      <Skeleton variant="text" width="60%" />
-                      <Skeleton variant="text" width="40%" />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      ) : (
-        <Grid container spacing={2}>
-          {patients.map((patient) => (
-            <Grid key={patient.id} size={{ xs: 12, md: 6, lg: 4 }}>
-              <Card 
-                sx={{ 
-                  height: '100%',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': { 
-                    boxShadow: 3, 
-                    transform: 'translateY(-2px)' 
-                  } 
-                }}
-              >
-                <CardContent>
-                  <Box display="flex" alignItems="flex-start" gap={2} mb={2}>
-                    {getPatientAvatar(patient)}
-                    <Box flex={1}>
-                      <Typography variant="h6" component="h3">
-                        {patient.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {patient.breed}
-                      </Typography>
-                      <Box display="flex" alignItems="center" gap={1} mt={1}>
-                        <Chip 
-                          icon={patient.gender === 'male' ? <MaleIcon /> : <FemaleIcon />}
-                          label={patient.gender}
-                          size="small"
-                          color={patient.gender === 'male' ? 'primary' : 'secondary'}
-                        />
-                        <Chip 
-                          icon={<CakeIcon />}
-                          label={calculateAge(patient.birthDate)}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </Box>
-                    </Box>
-                  </Box>
-
-                  <Box mb={2}>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Owner:</strong> {patient.ownerName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Phone:</strong> {patient.ownerPhone}
-                    </Typography>
-                    {patient.weight && (
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Weight:</strong> {patient.weight} kg
-                      </Typography>
-                    )}
-                  </Box>
-
-                  <Box display="flex" justifyContent="flex-end" gap={1}>
-                    <IconButton size="small" color="primary">
-                      <ViewIcon />
-                    </IconButton>
-                    <IconButton size="small" color="secondary">
-                      <EditIcon />
-                    </IconButton>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-
-      {patients.length === 0 && !loading && (
-        <Card>
-          <CardContent sx={{ textAlign: 'center', py: 8 }}>
-            <PetsIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              No patients yet
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mb={3}>
-              Get started by adding your first patient
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setDialogOpen(true)}
-            >
-              Add First Patient
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      {/* Patient Table */}
+      <Paper sx={{ width: '100%', mb: 4 }}>
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h5">
+            Patients ({patients.length})
+          </Typography>
+        </Box>
+        
+        <Box sx={{ height: 600, width: '100%' }}>
+          <DataGrid
+            rows={patients}
+            columns={columns}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 10,
+                },
+              },
+            }}
+            pageSizeOptions={[5, 10, 25]}
+            checkboxSelection
+            disableRowSelectionOnClick
+            loading={loading}
+            sx={{
+              border: 0,
+              '& .MuiDataGrid-cell': {
+                borderBottom: '1px solid #f0f0f0',
+              },
+              '& .MuiDataGrid-columnHeaders': {
+                backgroundColor: '#f8f9fa',
+                borderBottom: '2px solid #e0e0e0',
+              },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: '#f5f5f5',
+              },
+            }}
+            slots={{
+              noRowsOverlay: () => (
+                <Box 
+                  display="flex" 
+                  flexDirection="column" 
+                  alignItems="center" 
+                  justifyContent="center" 
+                  height="100%"
+                  sx={{ py: 4 }}
+                >
+                  <PetsIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    No patients yet
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={3}>
+                    Get started by adding your first patient
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setDialogOpen(true)}
+                  >
+                    Add First Patient
+                  </Button>
+                </Box>
+              ),
+            }}
+          />
+        </Box>
+      </Paper>
 
       {/* New Patient Dialog */}
       <Dialog 

@@ -21,6 +21,8 @@ const createPatientSchema = z.object({
 // GET /api/patients - Fetch all patients
 export async function GET() {
   try {
+    console.log('Attempting to fetch patients from database...');
+    
     const patients = await prisma.patient.findMany({
       orderBy: {
         createdAt: 'desc',
@@ -34,6 +36,8 @@ export async function GET() {
         },
       },
     });
+    
+    console.log(`Successfully fetched ${patients.length} patients`);
 
     // Transform the data to match frontend expectations
     const transformedPatients = patients.map((patient: PatientWithCounts) => ({
@@ -58,8 +62,15 @@ export async function GET() {
     return NextResponse.json(transformedPatients);
   } catch (error) {
     console.error('Error fetching patients:', error);
+    
+    // Return detailed error for debugging
     return NextResponse.json(
-      { error: 'Failed to fetch patients' },
+      { 
+        error: 'Failed to fetch patients',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
@@ -68,7 +79,10 @@ export async function GET() {
 // POST /api/patients - Create a new patient
 export async function POST(request: NextRequest) {
   try {
+    console.log('Attempting to create new patient...');
+    
     const body = await request.json();
+    console.log('Received patient data:', JSON.stringify(body, null, 2));
     
     // Validate the request body
     const validationResult = createPatientSchema.safeParse(body);
@@ -93,9 +107,13 @@ export async function POST(request: NextRequest) {
     };
 
     // Create the patient in the database
+    console.log('Creating patient with data:', JSON.stringify(patientData, null, 2));
+    
     const patient = await prisma.patient.create({
       data: patientData,
     });
+    
+    console.log('Successfully created patient:', patient.id);
 
     // Transform response to match frontend expectations
     const transformedPatient = {
@@ -118,8 +136,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(transformedPatient, { status: 201 });
   } catch (error) {
     console.error('Error creating patient:', error);
+    
+    // Return detailed error for debugging
     return NextResponse.json(
-      { error: 'Failed to create patient' },
+      { 
+        error: 'Failed to create patient',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
