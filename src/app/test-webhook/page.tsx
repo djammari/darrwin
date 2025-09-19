@@ -39,11 +39,41 @@ export default function TestWebhookPage() {
 
       console.log('🧪 Running Sesami webhook test...');
 
-      const response = await fetch('/api/test-webhook', {
+      // Create test booking payload that matches your Sesami format
+      const testBooking = {
+        "event": "appointment.created",
+        "sent_at": new Date().toISOString(),
+        "booking": {
+          "id": `test_booking_${Date.now()}`,
+          "status": "confirmed",
+          "service_id": "service_123",
+          "service_title": "Dog Grooming and Health Check",
+          "starts_at": new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+          "ends_at": new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // Tomorrow + 1 hour
+          "time_zone": "America/New_York",
+          "resource_id": "vet_room_1",
+          "resource_name": "Examination Room 1"
+        },
+        "customer": {
+          "shopify_customer_id": "shopify_123456",
+          "name": "Test Customer",
+          "email": "test@example.com",
+          "phone": "+1-555-TEST"
+        },
+        "metadata": {
+          "notes": "First time customer - be gentle with the dog",
+          "tags": "new-customer,grooming",
+          "source": "sesami"
+        }
+      };
+
+      // Send directly to the actual webhook endpoint
+      const response = await fetch('/api/webhooks/sesami', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(testBooking),
       });
 
       const data = await response.json();

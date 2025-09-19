@@ -60,11 +60,11 @@ export async function POST(request: NextRequest) {
 
     const { event, booking, customer, metadata } = validationResult.data;
     
-    // Ensure appointments table exists
+    // Ensure appointments table exists and has all required columns
     await prisma.$executeRaw`
       CREATE TABLE IF NOT EXISTS appointments (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        sesami_booking_id TEXT UNIQUE NOT NULL,
+        sesami_booking_id TEXT UNIQUE,
         patient_id TEXT,
         customer_name TEXT NOT NULL,
         customer_email TEXT,
@@ -84,6 +84,20 @@ export async function POST(request: NextRequest) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
+
+    // Add missing columns if they don't exist (for existing tables)
+    try {
+      await prisma.$executeRaw`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS sesami_booking_id TEXT UNIQUE`;
+      await prisma.$executeRaw`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS shopify_customer_id TEXT`;
+      await prisma.$executeRaw`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS service_id TEXT`;
+      await prisma.$executeRaw`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS resource_id TEXT`;
+      await prisma.$executeRaw`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS resource_name TEXT`;
+      await prisma.$executeRaw`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS time_zone TEXT`;
+      await prisma.$executeRaw`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS tags TEXT`;
+      console.log('✅ Appointments table updated with Sesami columns');
+    } catch (alterError) {
+      console.log('Table columns might already exist:', alterError);
+    }
 
     // Parse start and end times
     const startTime = new Date(booking.starts_at);
