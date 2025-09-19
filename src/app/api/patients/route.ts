@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { sql } from '@vercel/postgres';
 
@@ -49,7 +48,7 @@ export async function GET() {
     console.log(`Successfully fetched ${result.rows.length} patients`);
 
     // Transform the data to match frontend expectations
-    const transformedPatients = result.rows.map((patient: any) => ({
+    const transformedPatients = result.rows.map((patient) => ({
       id: patient.id,
       name: patient.name,
       breed: patient.breed,
@@ -106,12 +105,7 @@ export async function POST(request: NextRequest) {
 
     const data = validationResult.data;
     
-    // Convert gender to uppercase for database enum
-    const patientData = {
-      ...data,
-      gender: data.gender.toUpperCase() as 'MALE' | 'FEMALE',
-      birthDate: new Date(data.birthDate),
-    };
+    // Prepare data for database insertion
 
     // Create table first using direct SQL
     await sql`
