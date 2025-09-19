@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Calendar, momentLocalizer, Views, Event } from 'react-big-calendar';
-import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import moment from 'moment';
 import {
   Container,
@@ -32,11 +31,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 
-// Set up the localizer and DnD for react-big-calendar
+// Set up the localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
-const DnDCalendar = withDragAndDrop(Calendar);
 
 // Appointment interface
 interface CalendarEvent extends Event {
@@ -184,19 +181,11 @@ export default function CalendarPage() {
     // TODO: Open edit dialog
   }, []);
 
-  // Handle moving/resizing events (drag and drop)
-  const handleEventDrop = useCallback(({ event, start, end }: { event: CalendarEvent; start: Date; end: Date }) => {
-    const updatedEvents = events.map((existingEvent) => {
-      if (existingEvent.id === event.id) {
-        return { ...existingEvent, start, end };
-      }
-      return existingEvent;
-    });
-    setEvents(updatedEvents);
-    
-    // TODO: Update in database
-    console.log('Event moved:', { event, start, end });
-  }, [events]);
+  // Handle clicking on events
+  const handleEventClick = useCallback((event: CalendarEvent) => {
+    console.log('Event clicked:', event);
+    // TODO: Open edit dialog
+  }, []);
 
   // Submit new appointment
   const onSubmit = async (data: AppointmentFormData) => {
@@ -296,18 +285,15 @@ export default function CalendarPage() {
 
       {/* Calendar */}
       <Paper sx={{ p: 2, height: 600 }}>
-        <DnDCalendar
+        <Calendar
           localizer={localizer}
           events={events}
           startAccessor="start"
           endAccessor="end"
           style={{ height: '100%' }}
           onSelectSlot={handleSelectSlot}
-          onSelectEvent={handleSelectEvent}
-          onEventDrop={handleEventDrop}
-          onEventResize={handleEventDrop}
+          onSelectEvent={handleEventClick}
           selectable
-          resizable
           eventPropGetter={eventStyleGetter}
           components={{
             event: EventComponent,
@@ -326,7 +312,6 @@ export default function CalendarPage() {
         open={dialogOpen} 
         onClose={() => {
           setDialogOpen(false);
-          setSelectedSlot(null);
           reset();
         }}
         maxWidth="md"
