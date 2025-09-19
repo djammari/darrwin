@@ -23,6 +23,32 @@ export async function GET() {
   try {
     console.log('Attempting to fetch patients from database...');
     
+    // First, try to ensure the patients table exists
+    try {
+      await prisma.$executeRaw`
+        CREATE TABLE IF NOT EXISTS "patients" (
+          "id" TEXT NOT NULL,
+          "name" VARCHAR(50) NOT NULL,
+          "breed" VARCHAR(50) NOT NULL,
+          "birthDate" TIMESTAMP(3) NOT NULL,
+          "gender" TEXT NOT NULL,
+          "weight" DOUBLE PRECISION,
+          "color" VARCHAR(30),
+          "microchipId" VARCHAR(20),
+          "ownerName" VARCHAR(100) NOT NULL,
+          "ownerPhone" VARCHAR(25) NOT NULL,
+          "ownerEmail" VARCHAR(100),
+          "medicalNotes" TEXT,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "patients_pkey" PRIMARY KEY ("id")
+        );
+      `;
+      console.log('✅ Patients table ensured');
+    } catch (tableError) {
+      console.log('Table might already exist or creation failed:', tableError);
+    }
+    
     const patients = await prisma.patient.findMany({
       orderBy: {
         createdAt: 'desc',
@@ -105,6 +131,32 @@ export async function POST(request: NextRequest) {
       gender: data.gender.toUpperCase() as 'MALE' | 'FEMALE',
       birthDate: new Date(data.birthDate),
     };
+
+    // Ensure the table exists before creating
+    try {
+      await prisma.$executeRaw`
+        CREATE TABLE IF NOT EXISTS "patients" (
+          "id" TEXT NOT NULL,
+          "name" VARCHAR(50) NOT NULL,
+          "breed" VARCHAR(50) NOT NULL,
+          "birthDate" TIMESTAMP(3) NOT NULL,
+          "gender" TEXT NOT NULL,
+          "weight" DOUBLE PRECISION,
+          "color" VARCHAR(30),
+          "microchipId" VARCHAR(20),
+          "ownerName" VARCHAR(100) NOT NULL,
+          "ownerPhone" VARCHAR(25) NOT NULL,
+          "ownerEmail" VARCHAR(100),
+          "medicalNotes" TEXT,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "patients_pkey" PRIMARY KEY ("id")
+        );
+      `;
+      console.log('✅ Patients table ensured for creation');
+    } catch (tableError) {
+      console.log('Table creation check:', tableError);
+    }
 
     // Create the patient in the database
     console.log('Creating patient with data:', JSON.stringify(patientData, null, 2));
