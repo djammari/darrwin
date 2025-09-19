@@ -20,6 +20,27 @@ const createPatientSchema = z.object({
 // GET /api/patients - Fetch all patients
 export async function GET() {
   try {
+    // First, ensure the patients table exists
+    await prisma.$executeRaw`
+      CREATE TABLE IF NOT EXISTS "patients" (
+        "id" TEXT NOT NULL,
+        "name" VARCHAR(50) NOT NULL,
+        "breed" VARCHAR(50) NOT NULL,
+        "birthDate" TIMESTAMP(3) NOT NULL,
+        "gender" TEXT NOT NULL,
+        "weight" DOUBLE PRECISION,
+        "color" VARCHAR(30),
+        "microchipId" VARCHAR(20),
+        "ownerName" VARCHAR(100) NOT NULL,
+        "ownerPhone" VARCHAR(25) NOT NULL,
+        "ownerEmail" VARCHAR(100),
+        "medicalNotes" TEXT,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "patients_pkey" PRIMARY KEY ("id")
+      );
+    `;
+    
     const patients = await prisma.patient.findMany({
       orderBy: {
         createdAt: 'desc',
@@ -93,8 +114,28 @@ export async function POST(request: NextRequest) {
       birthDate: new Date(data.birthDate),
     };
 
+    // Ensure the patients table exists before creating
+    await prisma.$executeRaw`
+      CREATE TABLE IF NOT EXISTS "patients" (
+        "id" TEXT NOT NULL,
+        "name" VARCHAR(50) NOT NULL,
+        "breed" VARCHAR(50) NOT NULL,
+        "birthDate" TIMESTAMP(3) NOT NULL,
+        "gender" TEXT NOT NULL,
+        "weight" DOUBLE PRECISION,
+        "color" VARCHAR(30),
+        "microchipId" VARCHAR(20),
+        "ownerName" VARCHAR(100) NOT NULL,
+        "ownerPhone" VARCHAR(25) NOT NULL,
+        "ownerEmail" VARCHAR(100),
+        "medicalNotes" TEXT,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "patients_pkey" PRIMARY KEY ("id")
+      );
+    `;
+
     // Create the patient in the database
-    
     const patient = await prisma.patient.create({
       data: patientData,
     });
