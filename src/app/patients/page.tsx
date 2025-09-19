@@ -38,6 +38,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { differenceInYears, differenceInMonths } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 // Patient type definition
 interface Patient {
@@ -75,6 +76,7 @@ const patientSchema = z.object({
 type PatientFormData = z.infer<typeof patientSchema>;
 
 export default function PatientsPage() {
+  const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -308,7 +310,7 @@ export default function PatientsPage() {
           key="view"
           icon={<ViewIcon />}
           label="View"
-          onClick={() => console.log('View patient:', params.row.id)}
+          onClick={() => router.push(`/patients/${params.row.id}`)}
         />,
         <GridActionsCellItem
           key="edit"
@@ -412,6 +414,7 @@ export default function PatientsPage() {
             pageSizeOptions={[5, 10, 25]}
             checkboxSelection
             disableRowSelectionOnClick
+            onRowClick={(params) => router.push(`/patients/${params.row.id}`)}
             loading={loading}
             sx={{
               border: 0,
