@@ -13,7 +13,8 @@ import {
 import {
   Home as HomeIcon,
   Pets as PetsIcon,
-  CalendarToday as CalendarIcon
+  CalendarToday as CalendarIcon,
+  BugReport as TestIcon
 } from '@mui/icons-material';
 
 export default function Navigation() {
@@ -23,6 +24,7 @@ export default function Navigation() {
     { label: 'Home', href: '/', icon: <HomeIcon /> },
     { label: 'Patients', href: '/patients', icon: <PetsIcon /> },
     { label: 'Calendar', href: '/calendar', icon: <CalendarIcon /> },
+    { label: 'Test Webhook', href: '/test-webhook', icon: <TestIcon /> },
   ];
 
   return (
