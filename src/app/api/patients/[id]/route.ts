@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { sql } from '@vercel/postgres';
 
 // Validation schema for updating a patient
 const updatePatientSchema = z.object({
@@ -31,36 +31,35 @@ export async function GET(
   try {
     const { id } = await params;
     
-    // Fetch patient using direct SQL
-    const result = await sql`SELECT * FROM patients WHERE id = ${id}`;
+    const patient = await prisma.patient.findUnique({
+      where: { id },
+    });
     
-    if (result.rows.length === 0) {
+    if (!patient) {
       return NextResponse.json(
         { error: 'Patient not found' },
         { status: 404 }
       );
     }
-    
-    const patient = result.rows[0];
 
     // Transform the data to match frontend expectations
     const transformedPatient = {
       id: patient.id,
       name: patient.name,
       breed: patient.breed,
-      birthDate: patient.birth_date,
-      gender: patient.gender,
-      weight: patient.weight ? parseFloat(patient.weight) : null,
+      birthDate: patient.birthDate.toISOString(),
+      gender: patient.gender.toLowerCase(),
+      weight: patient.weight,
       color: patient.color,
-      microchipId: patient.microchip_id,
-      ownerName: patient.owner_name,
-      ownerPhone: patient.owner_phone,
-      ownerEmail: patient.owner_email,
-      medicalNotes: patient.medical_notes,
+      microchipId: patient.microchipId,
+      ownerName: patient.ownerName,
+      ownerPhone: patient.ownerPhone,
+      ownerEmail: patient.ownerEmail,
+      medicalNotes: patient.medicalNotes,
       appointments: [], // We'll add this later
       sessions: [], // We'll add this later
-      createdAt: patient.created_at,
-      updatedAt: patient.updated_at,
+      createdAt: patient.createdAt.toISOString(),
+      updatedAt: patient.updatedAt.toISOString(),
     };
 
     return NextResponse.json(transformedPatient);
@@ -139,8 +138,9 @@ export async function DELETE(
   try {
     const { id } = await params;
     
-    // Delete patient using direct SQL
-    await sql`DELETE FROM patients WHERE id = ${id}`;
+    await prisma.patient.delete({
+      where: { id },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
