@@ -2,30 +2,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
-// Sesami webhook payload schema
+// Sesami webhook payload schema (matching your exact format)
 const sesamiWebhookSchema = z.object({
-  event_type: z.enum(['booking.created', 'booking.updated', 'booking.cancelled']),
+  event: z.enum(['appointment.created', 'appointment.updated', 'appointment.cancelled']),
+  sent_at: z.string(),
   booking: z.object({
     id: z.string(),
-    customer: z.object({
-      name: z.string(),
-      email: z.string().email().optional(),
-      phone: z.string().optional(),
-    }),
-    service: z.object({
-      name: z.string(),
-      duration: z.number(), // in minutes
-      staff_member: z.string().optional(),
-    }),
-    appointment_time: z.string().datetime(),
-    status: z.enum(['confirmed', 'pending', 'cancelled', 'completed']),
+    status: z.string(),
+    service_id: z.string(),
+    service_title: z.string(),
+    starts_at: z.string(), // ISO datetime
+    ends_at: z.string(),   // ISO datetime
+    time_zone: z.string(),
+    resource_id: z.string().optional(),
+    resource_name: z.string().optional(),
+  }),
+  customer: z.object({
+    shopify_customer_id: z.string().optional(),
+    name: z.string(),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+  }),
+  metadata: z.object({
     notes: z.string().optional(),
-    // Add any other fields Sesami sends
+    tags: z.string().optional(),
+    source: z.string(),
   }),
-  shop: z.object({
-    domain: z.string(),
-  }),
-  timestamp: z.string().datetime(),
 });
 
 // POST /api/webhooks/sesami - Handle Sesami booking webhooks
@@ -56,35 +58,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { event_type, booking } = validationResult.data;
+    const { event, booking, customer, metadata } = validationResult.data;
     
     // Ensure appointments table exists
     await prisma.$executeRaw`
       CREATE TABLE IF NOT EXISTS appointments (
-        id TEXT PRIMARY KEY,
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         sesami_booking_id TEXT UNIQUE NOT NULL,
         patient_id TEXT,
         customer_name TEXT NOT NULL,
         customer_email TEXT,
         customer_phone TEXT,
+        shopify_customer_id TEXT,
+        service_id TEXT,
         service_name TEXT NOT NULL,
-        staff_member TEXT,
+        resource_id TEXT,
+        resource_name TEXT,
         start_time TIMESTAMP NOT NULL,
         end_time TIMESTAMP NOT NULL,
-        duration_minutes INTEGER NOT NULL,
+        time_zone TEXT,
         status TEXT NOT NULL,
         notes TEXT,
+        tags TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
 
-    // Calculate end time based on start time and duration
-    const startTime = new Date(booking.appointment_time);
-    const endTime = new Date(startTime.getTime() + booking.service.duration * 60000);
+    // Parse start and end times
+    const startTime = new Date(booking.starts_at);
+    const endTime = new Date(booking.ends_at);
 
-    switch (event_type) {
-      case 'booking.created':
+    switch (event) {
+      case 'appointment.created':
         console.log('🆕 Creating new appointment from Sesami booking');
         
         // Check if appointment already exists
@@ -96,15 +102,15 @@ export async function POST(request: NextRequest) {
           // Create new appointment
           await prisma.$executeRaw`
             INSERT INTO appointments (
-              id, sesami_booking_id, customer_name, customer_email, customer_phone,
-              service_name, staff_member, start_time, end_time, duration_minutes,
-              status, notes
+              sesami_booking_id, customer_name, customer_email, customer_phone,
+              shopify_customer_id, service_id, service_name, resource_id, resource_name,
+              start_time, end_time, time_zone, status, notes, tags
             ) VALUES (
-              ${`apt_${Date.now()}`}, ${booking.id}, ${booking.customer.name},
-              ${booking.customer.email || null}, ${booking.customer.phone || null},
-              ${booking.service.name}, ${booking.service.staff_member || null},
-              ${startTime.toISOString()}, ${endTime.toISOString()}, ${booking.service.duration},
-              ${booking.status}, ${booking.notes || null}
+              ${booking.id}, ${customer.name}, ${customer.email || null}, ${customer.phone || null},
+              ${customer.shopify_customer_id || null}, ${booking.service_id}, ${booking.service_title},
+              ${booking.resource_id || null}, ${booking.resource_name || null},
+              ${startTime.toISOString()}, ${endTime.toISOString()}, ${booking.time_zone},
+              ${booking.status}, ${metadata.notes || null}, ${metadata.tags || null}
             )
           `;
           
@@ -112,21 +118,22 @@ export async function POST(request: NextRequest) {
         }
         break;
 
-      case 'booking.updated':
+      case 'appointment.updated':
         console.log('📝 Updating appointment from Sesami booking');
         
         await prisma.$executeRaw`
           UPDATE appointments SET
-            customer_name = ${booking.customer.name},
-            customer_email = ${booking.customer.email || null},
-            customer_phone = ${booking.customer.phone || null},
-            service_name = ${booking.service.name},
-            staff_member = ${booking.service.staff_member || null},
+            customer_name = ${customer.name},
+            customer_email = ${customer.email || null},
+            customer_phone = ${customer.phone || null},
+            service_name = ${booking.service_title},
+            resource_name = ${booking.resource_name || null},
             start_time = ${startTime.toISOString()},
             end_time = ${endTime.toISOString()},
-            duration_minutes = ${booking.service.duration},
+            time_zone = ${booking.time_zone},
             status = ${booking.status},
-            notes = ${booking.notes || null},
+            notes = ${metadata.notes || null},
+            tags = ${metadata.tags || null},
             updated_at = CURRENT_TIMESTAMP
           WHERE sesami_booking_id = ${booking.id}
         `;
@@ -134,7 +141,7 @@ export async function POST(request: NextRequest) {
         console.log('✅ Appointment updated from Sesami booking');
         break;
 
-      case 'booking.cancelled':
+      case 'appointment.cancelled':
         console.log('❌ Cancelling appointment from Sesami booking');
         
         await prisma.$executeRaw`
@@ -151,7 +158,7 @@ export async function POST(request: NextRequest) {
     // Return success response
     return NextResponse.json({
       success: true,
-      message: `Processed ${event_type} for booking ${booking.id}`,
+      message: `Processed ${event} for booking ${booking.id}`,
       timestamp: new Date().toISOString(),
     });
 
@@ -175,7 +182,7 @@ export async function GET() {
   return NextResponse.json({
     message: 'Sesami webhook endpoint is ready',
     webhook_url: `${process.env.NEXTAUTH_URL || 'https://your-app.vercel.app'}/api/webhooks/sesami`,
-    supported_events: ['booking.created', 'booking.updated', 'booking.cancelled'],
+    supported_events: ['appointment.created', 'appointment.updated', 'appointment.cancelled'],
     timestamp: new Date().toISOString(),
   });
 }
