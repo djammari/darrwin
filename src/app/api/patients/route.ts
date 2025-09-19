@@ -13,7 +13,7 @@ const createPatientSchema = z.object({
   color: z.string().max(30).optional(),
   microchipId: z.string().max(20).optional(),
   ownerName: z.string().min(1).max(100),
-  ownerPhone: z.string().min(10).max(20),
+  ownerPhone: z.string().min(8).max(25),
   ownerEmail: z.string().email().optional(),
   medicalNotes: z.string().max(500).optional(),
 });

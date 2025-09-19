@@ -26,7 +26,7 @@ model Patient {
   
   // Owner information
   ownerName   String   @db.VarChar(100)
-  ownerPhone  String   @db.VarChar(20)
+  ownerPhone  String   @db.VarChar(25)
   ownerEmail  String?  @db.VarChar(100)
   
   // Medical information
