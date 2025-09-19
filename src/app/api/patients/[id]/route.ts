@@ -108,33 +108,11 @@ export async function PUT(
       updateData.birthDate = new Date(data.birthDate);
     }
 
-    // Update the patient in the database
-    const patient = await prisma.patient.update({
-      where: {
-        id,
-      },
-      data: updateData,
-    });
-
-    // Transform response to match frontend expectations
-    const transformedPatient = {
-      id: patient.id,
-      name: patient.name,
-      breed: patient.breed,
-      birthDate: patient.birthDate.toISOString(),
-      gender: patient.gender.toLowerCase(),
-      weight: patient.weight,
-      color: patient.color,
-      microchipId: patient.microchipId,
-      ownerName: patient.ownerName,
-      ownerPhone: patient.ownerPhone,
-      ownerEmail: patient.ownerEmail,
-      medicalNotes: patient.medicalNotes,
-      createdAt: patient.createdAt.toISOString(),
-      updatedAt: patient.updatedAt.toISOString(),
-    };
-
-    return NextResponse.json(transformedPatient);
+    // Update functionality coming soon
+    return NextResponse.json(
+      { error: 'Update functionality coming soon' },
+      { status: 501 }
+    );
   } catch (error) {
     console.error('Error updating patient:', error);
     
@@ -160,18 +138,16 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    await prisma.patient.delete({
-      where: {
-        id,
-      },
-    });
+    
+    // Delete patient using direct SQL
+    await sql`DELETE FROM patients WHERE id = ${id}`;
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting patient:', error);
     
-    // Handle specific Prisma errors
-    if (error instanceof Error && error.message.includes('Record to delete does not exist')) {
+    // Handle specific errors
+    if (error instanceof Error && error.message.includes('not found')) {
       return NextResponse.json(
         { error: 'Patient not found' },
         { status: 404 }
