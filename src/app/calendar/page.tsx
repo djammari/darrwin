@@ -137,31 +137,56 @@ export default function CalendarPage() {
         setPatients(patientsData);
       }
 
-      // For now, use demo appointments until we create the API
-      const demoEvents: CalendarEvent[] = [
-        {
-          id: '1',
-          title: 'Checkup - Buddy',
-          start: new Date(2025, 8, 19, 10, 0), // Sept 19, 2025, 10:00 AM
-          end: new Date(2025, 8, 19, 10, 30),
-          patientId: '1',
-          patientName: 'Buddy',
-          appointmentType: 'checkup',
-          status: 'scheduled',
-        },
-        {
-          id: '2',
-          title: 'Surgery - Luna',
-          start: new Date(2025, 8, 19, 14, 0), // Sept 19, 2025, 2:00 PM
-          end: new Date(2025, 8, 19, 15, 30),
-          patientId: '2',
-          patientName: 'Luna',
-          appointmentType: 'surgery',
-          status: 'scheduled',
-        },
-      ];
+      // Load appointments from API
+      const appointmentsResponse = await fetch('/api/appointments');
+      if (appointmentsResponse.ok) {
+        const appointmentsData = await appointmentsResponse.json();
+        
+        // Transform appointments to calendar events
+        const calendarEvents: CalendarEvent[] = appointmentsData.map((apt: {
+          id: string;
+          serviceName: string;
+          customerName: string;
+          startTime: string;
+          endTime: string;
+          patientId?: string;
+          status: string;
+          notes?: string;
+        }) => ({
+          id: apt.id,
+          title: `${apt.serviceName} - ${apt.customerName}`,
+          start: new Date(apt.startTime),
+          end: new Date(apt.endTime),
+          patientId: apt.patientId,
+          patientName: apt.customerName,
+          appointmentType: apt.serviceName.toLowerCase().includes('surgery') ? 'surgery' :
+                          apt.serviceName.toLowerCase().includes('emergency') ? 'emergency' :
+                          apt.serviceName.toLowerCase().includes('consultation') ? 'consultation' : 'checkup',
+          status: apt.status === 'confirmed' ? 'scheduled' : 
+                  apt.status === 'in-progress' ? 'in-progress' :
+                  apt.status === 'completed' ? 'completed' :
+                  apt.status === 'cancelled' ? 'cancelled' : 'scheduled',
+          notes: apt.notes,
+        }));
+        
+        setEvents(calendarEvents);
+      } else {
+        // Fallback to demo data if API fails
+        const demoEvents: CalendarEvent[] = [
+          {
+            id: '1',
+            title: 'Checkup - Buddy',
+            start: new Date(2025, 8, 19, 10, 0),
+            end: new Date(2025, 8, 19, 10, 30),
+            patientId: '1',
+            patientName: 'Buddy',
+            appointmentType: 'checkup',
+            status: 'scheduled',
+          },
+        ];
+        setEvents(demoEvents);
+      }
       
-      setEvents(demoEvents);
       setError(null);
     } catch {
       setError('Failed to load calendar data');
@@ -175,11 +200,6 @@ export default function CalendarPage() {
     setDialogOpen(true);
   }, [setValue]);
 
-  // Handle clicking on an existing event
-  const handleSelectEvent = useCallback((event: CalendarEvent) => {
-    console.log('Selected event:', event);
-    // TODO: Open edit dialog
-  }, []);
 
   // Handle clicking on events
   const handleEventClick = useCallback((event: CalendarEvent) => {
@@ -193,27 +213,45 @@ export default function CalendarPage() {
       // Find the selected patient
       const selectedPatient = patients.find(p => p.id === data.patientId);
       
-      // Create new event
-      const newEvent: CalendarEvent = {
-        id: Date.now().toString(), // Temporary ID
-        title: `${data.title} - ${selectedPatient?.name || 'Unknown'}`,
-        start: data.startTime,
-        end: data.endTime,
+      // Calculate duration in minutes
+      const durationMinutes = Math.round((data.endTime.getTime() - data.startTime.getTime()) / 60000);
+      
+      // Prepare appointment data for API
+      const appointmentData = {
         patientId: data.patientId,
-        patientName: selectedPatient?.name,
-        appointmentType: data.appointmentType,
-        status: 'scheduled',
-        notes: data.notes,
+        customerName: selectedPatient?.name || 'Unknown Patient',
+        customerEmail: '', // We'll get this from patient data later
+        customerPhone: '', // We'll get this from patient data later
+        serviceName: data.title,
+        staffMember: 'Dr. Veterinarian', // TODO: Add staff selection
+        startTime: data.startTime.toISOString(),
+        endTime: data.endTime.toISOString(),
+        durationMinutes,
+        status: 'confirmed',
+        notes: data.notes || '',
       };
 
-      setEvents(prev => [...prev, newEvent]);
-      setDialogOpen(false);
-      reset();
-      
-      // TODO: Save to database via API
-      console.log('New appointment:', newEvent);
+      // Save to database via API
+      const response = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(appointmentData),
+      });
+
+      if (response.ok) {
+        // Reload calendar data to show the new appointment
+        await loadData();
+        setDialogOpen(false);
+        reset();
+        console.log('✅ Appointment created successfully');
+      } else {
+        throw new Error('Failed to create appointment');
+      }
     } catch {
       console.error('Error creating appointment');
+      setError('Failed to create appointment');
     }
   };
 
