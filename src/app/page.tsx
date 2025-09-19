@@ -296,14 +296,15 @@ export default function Home() {
             Manage Patients
           </Button>
         </Link>
-        <Button 
-          variant="outlined" 
-          size="large"
-          startIcon={<CalendarToday />}
-          disabled
-        >
-          View Calendar (Coming Soon)
-        </Button>
+        <Link href="/calendar" passHref>
+          <Button 
+            variant="outlined" 
+            size="large"
+            startIcon={<CalendarToday />}
+          >
+            View Calendar
+          </Button>
+        </Link>
       </Box>
     </Container>
   );
