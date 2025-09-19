@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { sql } from '@vercel/postgres';
 
 // Validation schema for creating a new patient
 const createPatientSchema = z.object({
@@ -20,51 +21,49 @@ const createPatientSchema = z.object({
 // GET /api/patients - Fetch all patients
 export async function GET() {
   try {
-    // First, ensure the patients table exists
-    await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "patients" (
-        "id" TEXT NOT NULL,
-        "name" VARCHAR(50) NOT NULL,
-        "breed" VARCHAR(50) NOT NULL,
-        "birthDate" TIMESTAMP(3) NOT NULL,
-        "gender" TEXT NOT NULL,
-        "weight" DOUBLE PRECISION,
-        "color" VARCHAR(30),
-        "microchipId" VARCHAR(20),
-        "ownerName" VARCHAR(100) NOT NULL,
-        "ownerPhone" VARCHAR(25) NOT NULL,
-        "ownerEmail" VARCHAR(100),
-        "medicalNotes" TEXT,
-        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT "patients_pkey" PRIMARY KEY ("id")
+    console.log('Attempting to fetch patients from database...');
+    
+    // Create table using direct SQL (bypasses Prisma schema issues)
+    await sql`
+      CREATE TABLE IF NOT EXISTS patients (
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        name VARCHAR(50) NOT NULL,
+        breed VARCHAR(50) NOT NULL,
+        birth_date TIMESTAMP NOT NULL,
+        gender VARCHAR(10) NOT NULL,
+        weight DECIMAL(5,2),
+        color VARCHAR(30),
+        microchip_id VARCHAR(20),
+        owner_name VARCHAR(100) NOT NULL,
+        owner_phone VARCHAR(25) NOT NULL,
+        owner_email VARCHAR(100),
+        medical_notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
     
-    const patients = await prisma.patient.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    // Fetch patients using direct SQL
+    const result = await sql`SELECT * FROM patients ORDER BY created_at DESC`;
     
-    console.log(`Successfully fetched ${patients.length} patients`);
+    console.log(`Successfully fetched ${result.rows.length} patients`);
 
     // Transform the data to match frontend expectations
-    const transformedPatients = patients.map((patient) => ({
+    const transformedPatients = result.rows.map((patient: any) => ({
       id: patient.id,
       name: patient.name,
       breed: patient.breed,
-      birthDate: patient.birthDate.toISOString(),
-      gender: patient.gender.toLowerCase(),
-      weight: patient.weight,
+      birthDate: patient.birth_date,
+      gender: patient.gender,
+      weight: patient.weight ? parseFloat(patient.weight) : null,
       color: patient.color,
-      microchipId: patient.microchipId,
-      ownerName: patient.ownerName,
-      ownerPhone: patient.ownerPhone,
-      ownerEmail: patient.ownerEmail,
-      medicalNotes: patient.medicalNotes,
-      createdAt: patient.createdAt.toISOString(),
-      updatedAt: patient.updatedAt.toISOString(),
+      microchipId: patient.microchip_id,
+      ownerName: patient.owner_name,
+      ownerPhone: patient.owner_phone,
+      ownerEmail: patient.owner_email,
+      medicalNotes: patient.medical_notes,
+      createdAt: patient.created_at,
+      updatedAt: patient.updated_at,
     }));
 
     return NextResponse.json(transformedPatients);
@@ -114,48 +113,56 @@ export async function POST(request: NextRequest) {
       birthDate: new Date(data.birthDate),
     };
 
-    // Ensure the patients table exists before creating
-    await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS "patients" (
-        "id" TEXT NOT NULL,
-        "name" VARCHAR(50) NOT NULL,
-        "breed" VARCHAR(50) NOT NULL,
-        "birthDate" TIMESTAMP(3) NOT NULL,
-        "gender" TEXT NOT NULL,
-        "weight" DOUBLE PRECISION,
-        "color" VARCHAR(30),
-        "microchipId" VARCHAR(20),
-        "ownerName" VARCHAR(100) NOT NULL,
-        "ownerPhone" VARCHAR(25) NOT NULL,
-        "ownerEmail" VARCHAR(100),
-        "medicalNotes" TEXT,
-        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT "patients_pkey" PRIMARY KEY ("id")
+    // Create table first using direct SQL
+    await sql`
+      CREATE TABLE IF NOT EXISTS patients (
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        name VARCHAR(50) NOT NULL,
+        breed VARCHAR(50) NOT NULL,
+        birth_date TIMESTAMP NOT NULL,
+        gender VARCHAR(10) NOT NULL,
+        weight DECIMAL(5,2),
+        color VARCHAR(30),
+        microchip_id VARCHAR(20),
+        owner_name VARCHAR(100) NOT NULL,
+        owner_phone VARCHAR(25) NOT NULL,
+        owner_email VARCHAR(100),
+        medical_notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
 
-    // Create the patient in the database
-    const patient = await prisma.patient.create({
-      data: patientData,
-    });
+    // Insert patient using direct SQL
+    const result = await sql`
+      INSERT INTO patients (
+        name, breed, birth_date, gender, weight, color, microchip_id,
+        owner_name, owner_phone, owner_email, medical_notes
+      ) VALUES (
+        ${data.name}, ${data.breed}, ${data.birthDate}, ${data.gender},
+        ${data.weight || null}, ${data.color || null}, ${data.microchipId || null},
+        ${data.ownerName}, ${data.ownerPhone}, ${data.ownerEmail || null}, ${data.medicalNotes || null}
+      ) RETURNING *;
+    `;
+
+    const patient = result.rows[0];
 
     // Transform response to match frontend expectations
     const transformedPatient = {
       id: patient.id,
       name: patient.name,
       breed: patient.breed,
-      birthDate: patient.birthDate.toISOString(),
-      gender: patient.gender.toLowerCase(),
-      weight: patient.weight,
+      birthDate: patient.birth_date,
+      gender: patient.gender,
+      weight: patient.weight ? parseFloat(patient.weight) : null,
       color: patient.color,
-      microchipId: patient.microchipId,
-      ownerName: patient.ownerName,
-      ownerPhone: patient.ownerPhone,
-      ownerEmail: patient.ownerEmail,
-      medicalNotes: patient.medicalNotes,
-      createdAt: patient.createdAt.toISOString(),
-      updatedAt: patient.updatedAt.toISOString(),
+      microchipId: patient.microchip_id,
+      ownerName: patient.owner_name,
+      ownerPhone: patient.owner_phone,
+      ownerEmail: patient.owner_email,
+      medicalNotes: patient.medical_notes,
+      createdAt: patient.created_at,
+      updatedAt: patient.updated_at,
     };
 
     return NextResponse.json(transformedPatient, { status: 201 });
