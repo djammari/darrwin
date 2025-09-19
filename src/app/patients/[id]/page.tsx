@@ -18,7 +18,6 @@ import {
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
-  Pets as PetsIcon,
   Edit as EditIcon,
   Male as MaleIcon,
   Female as FemaleIcon,
